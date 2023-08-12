@@ -1,3 +1,7 @@
+/*
+    Geometry utilities package
+*/
+
 use itertools::Itertools;
 use log;
 use num::Integer;
@@ -12,6 +16,11 @@ use std::{
 #[allow(dead_code)]
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
+/*
+    We define a custom error type for when the geometric figure cannot be constructed
+    from imput data.
+*/
+
 #[derive(Debug, Clone)]
 struct ImpossibleFigureErr;
 
@@ -24,7 +33,7 @@ impl error::Error for ImpossibleFigureErr {}
 
 /*
 Absurdly type-generic function to return a generic iterator containing the coordinates for
-the cross in a width x height grid.
+the cross in a width x height grid. How many traits a generic integer must comply with? :O
 */
 pub fn compute_cross_coordinates<T>(width: T, height: T) -> Result<impl Iterator<Item = (T, T)>>
 where
@@ -41,7 +50,7 @@ where
         log::error!("Maps cannot have negative coordinates");
         Err(ImpossibleFigureErr.into())
     } else {
-        let two = T::one() + T::one(); // Two is not a trait
+        let two = T::one() + T::one(); // Two is not a pre-defined trait
         Ok((two..square_environment_size - two)
             .flat_map(move |i| vec![(i, square_environment_size - i - T::one()), (i, i)])
             .unique())

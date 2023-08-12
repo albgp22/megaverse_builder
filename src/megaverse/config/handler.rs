@@ -1,3 +1,8 @@
+/*
+    Define common application configuration alongside some traits about
+    how to serialize/deserialize it. Useful for parsing it from a json file.
+*/
+
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::fmt;

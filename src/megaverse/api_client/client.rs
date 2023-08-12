@@ -19,6 +19,8 @@ pub struct ApiClient {
 
 impl ApiClient {
     fn post(&self, endpoint: String, body: String) -> Result<(StatusCode, String)> {
+        // Implementing a manual retry mechanism.
+        // We can safely retry as, in this particular case, POST is idempotent.
         for attempt in 0..=self.retries {
             match self
                 .client
@@ -27,9 +29,7 @@ impl ApiClient {
                 .header("Content-type", "application/json")
                 .send()
             {
-                Ok(res) if res.status()==200 => {
-                    return Ok((res.status(), res.text()?))
-                }
+                Ok(res) if res.status() == 200 => return Ok((res.status(), res.text()?)),
                 Err(e) => {
                     if attempt == self.retries {
                         return Err(Box::new(e));
@@ -38,8 +38,12 @@ impl ApiClient {
                     }
                 }
                 Ok(res) => {
-                    warn!("Got status code {sc}!=200. Retrying", sc=res.status());
-                    if res.status()==429{
+                    warn!("Got status code {sc}!=200. Retrying", sc = res.status());
+                    // Specific behavior for "Too Many Requests" status code as we
+                    // found out that the API being used has a maximum allowed rate.
+                    // Improvement: implement exponential backoff for that.
+                    // Improvement: make this sleep configurable.
+                    if res.status() == 429 {
                         warn!("Too many requests. Sleeping for 10s.");
                         thread::sleep(Duration::from_secs(10));
                     }
@@ -49,15 +53,18 @@ impl ApiClient {
         unreachable!()
     }
 
+    // Create the astral object
     pub fn create_object(&self, obj: &AstralObject) -> Result<()> {
         let endpoint = self.get_resource_endpoint(obj);
         let request_body = obj.json_with_additional_fields(HashMap::from([(
             "candidateId".to_string(),
             self.cfg.candidate_id.to_string(),
         )]));
+
         info!("Creating object {obj:?} in API {endpoint} with json body {request_body}");
         let (status, body) = self.post(endpoint, request_body)?;
         info!("Response code: {status}, Response body: {body}");
+
         Ok(())
     }
 
@@ -75,6 +82,7 @@ impl ApiClient {
         )
     }
 
+    /* Functions to retrieve and parse the goal map */
     fn goal_endpoint(&self) -> String {
         format!(
             "{protocol}://{hostname}{api_endpoint}{resource}",
