@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use crate::megaverse::config::handler::Config;
 use crate::megaverse::api_client::client::ApiClient;
+use crate::megaverse::config::handler::Config;
 use reqwest::blocking::Client;
 
 #[derive(Default)]
@@ -14,8 +14,8 @@ pub struct ApiClientBuilder {
 // Builder pattern!
 impl ApiClientBuilder {
     pub fn new() -> ApiClientBuilder {
-        ApiClientBuilder{
-            timeout: Duration::from_secs(1), 
+        ApiClientBuilder {
+            timeout: Duration::from_secs(1),
             ..Default::default()
         }
     }

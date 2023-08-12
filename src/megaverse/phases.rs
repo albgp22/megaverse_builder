@@ -23,16 +23,19 @@ pub fn phase1(cfg: &Config) -> Result<()> {
         .with_timeout(Duration::from_secs(5))
         .build();
 
+    // This phase was solved so this endpoint has changed. Hardcoding the result.
     //let (m,n): (u32,u32) = api_client.get_goal_dims()?;
-
     let (m, n): (u32, u32) = (11, 11);
     info!("Coordinates for given map are: ({m},{n})");
 
     let polyanets_to_create = geo::compute_cross_coordinates(m, n)?
         .map(|(x, y)| AstralObject::Polyanet { row: x, column: y });
 
+    //
     for po in polyanets_to_create {
-        api_client.create_object(&po)?;
+        if let Err(e) = api_client.create_object(&po) {
+            log::error!("Error creating {po:?}: {e}");
+        }
     }
 
     Ok(())
@@ -54,6 +57,7 @@ pub fn phase2(cfg: &Config) -> Result<()> {
 
     let reference_map = api_client.get_goal_resp();
 
+    // Read the goal map and create corresponding objects.
     for (i, col) in reference_map?.goal.iter().enumerate() {
         for (j, description) in col.iter().enumerate() {
             let position_content =

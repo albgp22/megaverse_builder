@@ -1,3 +1,7 @@
+/*
+    Megaverse-specific types
+*/
+
 use serde::Serialize;
 use serde_json::Value;
 use std::{collections::HashMap, fmt::Debug, str::FromStr};
@@ -11,6 +15,7 @@ pub enum Color {
     White,
 }
 
+// Constructor /*air quotes*/ from string. Useful for parsing objects from the REST API.
 impl FromStr for Color {
     type Err = ();
 
@@ -69,6 +74,9 @@ pub enum AstralObject {
     },
 }
 
+/*
+Dumps the astral object to JSON string, allowing to specify extra fields if necessary.
+*/
 impl AstralObject {
     pub fn json_with_additional_fields(&self, fields: HashMap<String, String>) -> String {
         let v = serde_json::to_value(self).unwrap();
@@ -86,6 +94,7 @@ impl AstralObject {
     }
 }
 
+// Builder from application-specific string.
 impl AstralObject {
     pub fn build_from_string(row: u32, column: u32, description: String) -> Option<AstralObject> {
         if description.contains("POLYANET") {
@@ -95,11 +104,13 @@ impl AstralObject {
             return Some(AstralObject::Cometh {
                 row,
                 column,
+                // TODO. Do not unwrap this error. This is not fault-tolerant to typos in
+                // the value returned by the API.
                 direction: Direction::from_str(description.as_str().split('_').next()?).unwrap(),
             });
         }
         if description.contains("SOLOON") {
-            return Some(AstralObject::Soloon { 
+            return Some(AstralObject::Soloon {
                 row,
                 column,
                 color: Color::from_str(description.as_str().split('_').next()?).unwrap(),
