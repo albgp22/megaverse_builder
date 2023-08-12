@@ -9,11 +9,14 @@ use megaverse::config::handler::{read_config_from_file, Config};
 use megaverse::utils::fs::get_abs_path;
 use std::error;
 
+/// Simple API client for building the MEGAVERSE!
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    /// Problem phase to automatically solve.
     #[arg(short, long, default_value_t = 2u32)]
     phase: u32,
+    /// Config file path. Doesn't matter wether absolute or relative.
     #[arg(short, long, default_value_t=String::from("./config.json"))]
     config_file: String,
 }
