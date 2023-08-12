@@ -1,0 +1,14 @@
+{
+    "host": "challenge.crossmint.io",
+    "protocol": "https",
+    "api_endpoint": "/api",
+    "port": 443,
+    "parallel": false,
+    "candidate_id": "ab421937-a26b-4527-89e1-f41791d5d512",
+    "resources": {
+        "soloons": "/soloons",
+        "polyanets": "/polyanets",
+        "comeths": "/comeths",
+        "goal": "/map/ab421937-a26b-4527-89e1-f41791d5d512/goal"
+    }
+}
