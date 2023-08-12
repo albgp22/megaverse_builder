@@ -95,8 +95,17 @@ impl ApiClient {
 
     pub fn get_goal_resp(&self) -> Result<GoalResponse> {
         let endpoint = self.goal_endpoint();
-        let res = self.client.get(endpoint).send()?;
-        let map: GoalResponse = res.json()?;
+        let res = match self.client.get(endpoint).send() {
+            Ok(res) => res,
+            Err(e) => {
+                return Err(format!("Failed while getting the goal map from the API: {e}").into())
+            }
+        };
+        let map: GoalResponse = match res.json() {
+            Ok(map) => map,
+            Err(e) => return Err(format!("Failed while parsing the goal map: {e}").into()),
+        };
+
         Ok(map)
     }
 
