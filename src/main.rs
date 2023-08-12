@@ -32,7 +32,8 @@ async fn main() -> Result<()> {
         unimplemented!("Asyncronous interaction towards the client API is not implemented yet.")
     }
 
-    megaverse::phases::phase1(&cfg)?;
+    //megaverse::phases::phase1(&cfg)?;
+    megaverse::phases::phase2(&cfg)?;
 
     Ok(())
 }
