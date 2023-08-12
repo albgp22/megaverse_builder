@@ -16,7 +16,7 @@ struct Cli {
     /// Problem phase to automatically solve.
     #[arg(short, long, default_value_t = 2u32)]
     phase: u32,
-    /// Config file path. Doesn't matter wether absolute or relative.
+    /// Config file path. Doesn't matter whether absolute or relative.
     #[arg(short, long, default_value_t=String::from("./config.json"))]
     config_file: String,
 }
