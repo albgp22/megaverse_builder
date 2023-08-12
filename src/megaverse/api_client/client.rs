@@ -2,11 +2,12 @@ use crate::megaverse::api_client::types::GoalResponse;
 use crate::megaverse::astral::objects::AstralObject;
 use crate::megaverse::config::handler::Config;
 use log;
-use log::{debug, info, warn};
+use log::{info, warn};
 use reqwest::blocking::Client;
 use reqwest::StatusCode;
 use std::collections::HashMap;
-use std::error;
+use std::time::Duration;
+use std::{error, thread};
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -26,12 +27,21 @@ impl ApiClient {
                 .header("Content-type", "application/json")
                 .send()
             {
-                Ok(res) => return Ok((res.status(), res.text()?)),
+                Ok(res) if res.status()==200 => {
+                    return Ok((res.status(), res.text()?))
+                }
                 Err(e) => {
                     if attempt == self.retries {
                         return Err(Box::new(e));
                     } else {
                         warn!("Got error {e:?}, retrying.");
+                    }
+                }
+                Ok(res) => {
+                    warn!("Got status code {sc}!=200. Retrying", sc=res.status());
+                    if res.status()==429{
+                        warn!("Too many requests. Sleeping for 10s.");
+                        thread::sleep(Duration::from_secs(10));
                     }
                 }
             }
@@ -65,7 +75,7 @@ impl ApiClient {
         )
     }
 
-    fn get_goal_endpoint(&self) -> String {
+    fn goal_endpoint(&self) -> String {
         format!(
             "{protocol}://{hostname}{api_endpoint}{resource}",
             protocol = self.cfg.protocol.to_string(),
@@ -75,11 +85,16 @@ impl ApiClient {
         )
     }
 
-    pub fn get_goal_dims(&self) -> Result<(u32, u32)> {
-        let endpoint = self.get_goal_endpoint();
-        debug!("Endpoint: {endpoint}");
+    pub fn get_goal_resp(&self) -> Result<GoalResponse> {
+        let endpoint = self.goal_endpoint();
         let res = self.client.get(endpoint).send()?;
         let map: GoalResponse = res.json()?;
-        Ok((map.goal.len() as u32, map.goal[0].len() as u32))
+        Ok(map)
+    }
+
+    #[allow(dead_code)]
+    pub fn get_goal_dims(&self) -> Result<(u32, u32)> {
+        let goal_resp = self.get_goal_resp()?;
+        Ok((goal_resp.goal.len() as u32, goal_resp.goal[0].len() as u32))
     }
 }

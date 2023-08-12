@@ -9,6 +9,7 @@ use std::{
     ops::Sub,
 };
 
+#[allow(dead_code)]
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 #[derive(Debug, Clone)]
