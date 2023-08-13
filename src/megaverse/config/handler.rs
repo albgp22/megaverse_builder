@@ -19,6 +19,7 @@ pub enum AppProtocol {
     Https,
 }
 
+// Easily to turn an enum object into "http" or "https" strings.
 impl fmt::Display for AppProtocol {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let lowercase_name = format!("{:?}", self).trim().to_lowercase();

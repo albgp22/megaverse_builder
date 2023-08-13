@@ -21,6 +21,7 @@ impl ApiClient {
     fn post(&self, endpoint: String, body: String) -> Result<(StatusCode, String)> {
         // Implementing a manual retry mechanism.
         // We can safely retry as, in this particular case, POST is idempotent.
+        let mut wait_time = 1; //Exponential backoff
         for attempt in 0..=self.retries {
             match self
                 .client
@@ -38,17 +39,20 @@ impl ApiClient {
                     }
                 }
                 Ok(res) => {
-                    warn!("Got status code {sc}!=200. Retrying", sc = res.status());
-                    // Specific behavior for "Too Many Requests" status code as we
-                    // found out that the API being used has a maximum allowed rate.
-                    // Improvement: implement exponential backoff for that.
-                    // Improvement: make this sleep configurable.
-                    if res.status() == 429 {
-                        warn!("Too many requests. Sleeping for 10s.");
-                        thread::sleep(Duration::from_secs(10));
+                    if attempt == self.retries {
+                        return Err(
+                            "Maximum number of retries reached without a successful response."
+                                .to_string()
+                                .into(),
+                        );
+                    } else {
+                        warn!("Got status code {sc}!=200. Retrying", sc = res.status());
                     }
                 }
             }
+            wait_time *= 2;
+            warn!("Sleeping for {wait_time}s.");
+            thread::sleep(Duration::from_secs(wait_time));
         }
         unreachable!()
     }

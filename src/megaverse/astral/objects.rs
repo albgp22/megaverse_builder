@@ -2,6 +2,7 @@
     Megaverse-specific types
 */
 
+use log::error;
 use serde::Serialize;
 use serde_json::Value;
 use std::{collections::HashMap, fmt::Debug, str::FromStr};
@@ -92,6 +93,11 @@ impl AstralObject {
         }
         .to_string()
     }
+
+    #[allow(dead_code)]
+    pub fn json(&self) -> String {
+        self.json_with_additional_fields(HashMap::new())
+    }
 }
 
 // Builder from application-specific string.
@@ -101,20 +107,30 @@ impl AstralObject {
             return Some(AstralObject::Polyanet { row, column });
         }
         if description.contains("COMETH") {
+            let direction = match Direction::from_str(description.as_str().split('_').next()?) {
+                Ok(direction) => direction,
+                Err(e) => {
+                    error!(
+                        "Direction could not be parsed from {description}: {e:?}. Skipping object."
+                    );
+                    return None;
+                }
+            };
             return Some(AstralObject::Cometh {
                 row,
                 column,
-                // TODO. Do not unwrap this error. This is not fault-tolerant to typos in
-                // the value returned by the API.
-                direction: Direction::from_str(description.as_str().split('_').next()?).unwrap(),
+                direction,
             });
         }
         if description.contains("SOLOON") {
-            return Some(AstralObject::Soloon {
-                row,
-                column,
-                color: Color::from_str(description.as_str().split('_').next()?).unwrap(),
-            });
+            let color = match Color::from_str(description.as_str().split('_').next()?) {
+                Ok(color) => color,
+                Err(e) => {
+                    error!("Color could not be parsed from {description}: {e:?}. Skipping object.");
+                    return None;
+                }
+            };
+            return Some(AstralObject::Soloon { row, column, color });
         }
         None
     }

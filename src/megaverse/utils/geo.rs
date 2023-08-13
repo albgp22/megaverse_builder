@@ -33,7 +33,18 @@ impl error::Error for ImpossibleFigureErr {}
 
 /*
 Absurdly type-generic function to return a generic iterator containing the coordinates for
-the cross in a width x height grid. How many traits a generic integer must comply with? :O
+the cross in a width x height grid. Example for 11x11:
+***********
+***********
+**x*****x**
+***x***x***
+****x*x****
+*****x*****
+****x*x****
+***x***x***
+**x*****x**
+***********
+***********
 */
 pub fn compute_cross_coordinates<T>(width: T, height: T) -> Result<impl Iterator<Item = (T, T)>>
 where
