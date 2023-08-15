@@ -1,7 +1,7 @@
 use crate::megaverse::api_client::types::GoalResponse;
 use crate::megaverse::astral::objects::AstralObject;
 use crate::megaverse::config::handler::Config;
-use crate::megaverse::procedural_macros::retry::exponential_backoff;
+use crate::megaverse::procedural::retry::exponential_backoff;
 use log;
 use log::{info};
 use reqwest::blocking::Client;

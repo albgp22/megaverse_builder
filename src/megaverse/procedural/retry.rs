@@ -1,16 +1,15 @@
 use log::{debug, warn};
-use reqwest::StatusCode;
 use std::time::Duration;
 use std::{error, thread};
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-pub fn exponential_backoff(
+pub fn exponential_backoff<T>(
     retries: u32,
     initial_time: Duration,
     exponent: u32,
-    f: &impl Fn() -> Result<(StatusCode, String)>,
-) -> Result<(StatusCode, String)> {
+    f: &impl Fn() -> Result<T>,
+) -> Result<T> {
     let mut wait_time = initial_time;
     for attempt in 0..=retries {
         match f() {
