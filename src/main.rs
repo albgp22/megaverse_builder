@@ -28,13 +28,13 @@ async fn main() -> Result<()> {
     env_logger::init();
     debug!("Logging engine... Enabled!");
 
-    let filepath = get_abs_path(&args.config_file)?;
+    let configfilepath = get_abs_path(&args.config_file)?;
 
-    let cfg: Config = match read_config_from_file(&filepath) {
+    let cfg: Config = match read_config_from_file(&configfilepath) {
         Ok(cfg) => cfg,
         Err(e) => {
             log::error!(
-                "Error reading config from {filepath:?}: {errdescription}",
+                "Error reading config from {configfilepath:?}: {errdescription}",
                 errdescription = e.to_string()
             );
             return Err(e);
