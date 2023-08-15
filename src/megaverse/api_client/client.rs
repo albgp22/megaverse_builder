@@ -1,13 +1,14 @@
 use crate::megaverse::api_client::types::GoalResponse;
 use crate::megaverse::astral::objects::AstralObject;
 use crate::megaverse::config::handler::Config;
+use crate::megaverse::procedural_macros::retry::exponential_backoff;
 use log;
-use log::{info, warn};
+use log::{info};
 use reqwest::blocking::Client;
 use reqwest::StatusCode;
 use std::collections::HashMap;
 use std::time::Duration;
-use std::{error, thread};
+use std::{error};
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -18,43 +19,18 @@ pub struct ApiClient {
 }
 
 impl ApiClient {
-    fn post(&self, endpoint: String, body: String) -> Result<(StatusCode, String)> {
-        // Implementing a manual retry mechanism.
-        // We can safely retry as, in this particular case, POST is idempotent.
-        let mut wait_time = 1; //Exponential backoff
-        for attempt in 0..=self.retries {
-            match self
-                .client
-                .post(endpoint.clone())
-                .body(body.clone())
-                .header("Content-type", "application/json")
-                .send()
-            {
-                Ok(res) if res.status() == 200 => return Ok((res.status(), res.text()?)),
-                Err(e) => {
-                    if attempt == self.retries {
-                        return Err(Box::new(e));
-                    } else {
-                        warn!("Got error {e:?}, retrying.");
-                    }
-                }
-                Ok(res) => {
-                    if attempt == self.retries {
-                        return Err(
-                            "Maximum number of retries reached without a successful response."
-                                .to_string()
-                                .into(),
-                        );
-                    } else {
-                        warn!("Got status code {sc}!=200. Retrying", sc = res.status());
-                    }
-                }
-            }
-            wait_time *= 2;
-            warn!("Sleeping for {wait_time}s.");
-            thread::sleep(Duration::from_secs(wait_time));
+    fn post(&self, endpoint: &str, body: &str) -> Result<(StatusCode, String)> {
+        match self
+            .client
+            .post(endpoint.to_string())
+            .body(body.to_string())
+            .header("Content-type", "application/json")
+            .send()
+        {
+            Ok(res) if res.status() == 200 => Ok((res.status(), res.text()?)),
+            Err(e) => Err(Box::new(e)),
+            Ok(res) => Err(format!("Wrong status code: {sc}", sc = res.status()).into()),
         }
-        unreachable!()
     }
 
     // Create the astral object
@@ -66,7 +42,10 @@ impl ApiClient {
         )]));
 
         info!("Creating object {obj:?} in API {endpoint} with json body {request_body}");
-        let (status, body) = self.post(endpoint, request_body)?;
+        // We can safely retry as, in this particular case, POST is idempotent.
+        let post_function = move || self.post(&endpoint, &request_body);
+        let (status, body) =
+            exponential_backoff(self.retries, Duration::from_secs(1), 2, &post_function)?;
         info!("Response code: {status}, Response body: {body}");
 
         Ok(())

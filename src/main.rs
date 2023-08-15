@@ -21,8 +21,7 @@ struct Cli {
     config_file: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Cli::parse();
 
     env_logger::init();

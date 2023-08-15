@@ -52,7 +52,8 @@ pub fn phase2(cfg: &Config) -> Result<()> {
         .build();
 
     debug!("Reading reference map from the API");
-    let reference_map = api_client.get_goal_resp()?;
+    let reference_map: crate::megaverse::api_client::types::GoalResponse =
+        api_client.get_goal_resp()?;
     info!("Reference map successfully read from server. Creating objects...");
 
     // Read the goal map and create corresponding objects.
