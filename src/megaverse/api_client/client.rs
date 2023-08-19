@@ -27,7 +27,7 @@ impl ApiClient {
             .header("Content-type", "application/json")
             .send()
         {
-            Ok(res) if res.status() == 200 => Ok((res.status(), res.text()?)),
+            Ok(res) if res.status().is_success()  => Ok((res.status(), res.text()?)),
             Err(e) => Err(Box::new(e)),
             Ok(res) => Err(format!("Wrong status code: {sc}", sc = res.status()).into()),
         }
